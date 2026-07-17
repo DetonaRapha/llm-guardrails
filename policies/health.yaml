@@ -1,0 +1,69 @@
+# Política declarativa de guardrails — domínio: saúde.
+#
+# Este arquivo é a governança do sistema. Mudar comportamento é mudar aqui,
+# revisável em code review, sem tocar no código. Versionado de propósito.
+#
+# Semântica das ações (da menos à mais restritiva):
+#   allow < redact < require_approval < escalate < block
+#
+# Postura: fail_closed. Na dúvida ou no erro de um detector, barra — nunca deixa
+# passar. `severity_actions` eleva a ação conforme a gravidade do veredito.
+
+version: 1
+fail_closed: true
+
+# Ação aplicada quando um detector lança erro (fail-closed). Opcional; sem ela,
+# o fallback é `block` porque fail_closed é true.
+on_error: block
+
+input:
+  # Redige PII antes de mandar pro modelo e antes de logar.
+  pii_redaction:
+    enabled: true
+    action: redact
+
+  # Barra injeção de prompt / jailbreak a partir de severidade média.
+  prompt_injection:
+    enabled: true
+    action: block
+    min_severity: medium
+
+  # Escala entrada fora do escopo de saúde (ex: pedido de conselho jurídico).
+  topicality:
+    enabled: true
+    action: escalate
+    allowed_topics: [saude]
+
+output:
+  # Se a resposta deveria ser estruturada, valida o schema; fora do formato, barra.
+  # (Só dispara quando há schema esperado no metadata ou em required_keys.)
+  schema:
+    enabled: true
+    action: block
+
+  # Redige PII que o modelo possa ter reproduzido do contexto.
+  pii_leak:
+    enabled: true
+    action: redact
+
+  # Escala respostas pouco sustentadas pelo contexto (possível alucinação).
+  groundedness:
+    enabled: true
+    action: escalate
+    threshold: 0.7
+
+  # Barra toxicidade / conteúdo inseguro.
+  safety:
+    enabled: true
+    action: block
+    threshold: 0.5
+
+  # Conformidade de domínio (saúde): sem diagnóstico definitivo nem prescrição.
+  domain_policy:
+    enabled: true
+    action: block
+
+# Eleva a ação conforme a severidade do veredito, independentemente do hint.
+severity_actions:
+  critical: block
+  high: escalate

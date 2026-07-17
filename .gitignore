@@ -1,0 +1,43 @@
+# Segredos — nunca commitar
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Documento de spec interno — não versionar
+llm-guardrails-SPEC.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Auditoria em disco (pode conter dados operacionais)
+audit_log.jsonl
+*.audit.jsonl
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
